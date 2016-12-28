@@ -64,3 +64,18 @@
 .RichEditor-activeButton {
   color: #5890ff;
 }
+
+
+
+.RichEditor-prompt {
+  font-family: 'Helvetica', sans-serif;
+  font-size: 14px;
+  padding: 8px;
+}
+.RichEditor-prompt input {
+  border: 1px solid #ddd;
+  padding: 3px;
+  margin: 0 3px;
+  width: 240px;
+  outline: none;
+}

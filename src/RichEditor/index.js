@@ -14,7 +14,7 @@ const styleMap = {
   UNDERLINE: {
     textDecoration: 'none',
     borderBottom: '1px solid',
-  }
+  },
 };
 
 
@@ -24,6 +24,7 @@ const getBlockStyle = (block) => {
     default: return null;
   }
 }
+
 
 const findLinkEntities = (contentBlock, callback) => {
   contentBlock.findEntityRanges(
@@ -48,6 +49,7 @@ const Link = (props) => {
 };
 
 
+
 const Image = (props) => {
   return (
     <div>
@@ -69,11 +71,11 @@ const Video = (props) => {
 const Media = (props) => {
   const entity = Entity.get(props.block.getEntityAt(0));
   const type = entity.getType();
-  const {src, description} = entity.getData();
+  const {url, description} = entity.getData();
 
   switch(type) {
-    case 'IMAGE': return <Image src={src} description={description} />;
-    case 'VIDEO': return <Video src={src} description={description} />;
+    case 'IMAGE': return <Image src={url} description={description} />;
+    case 'VIDEO': return <Video src={url} description={description} />;
     default: return null;
   }
 }
@@ -84,14 +86,17 @@ const myMediaBlockRenderer = (block) => {
   if (type === 'atomic') {
     return {
       component: Media,
-      editable: false
+      editable: false,
     };
   }
 
   return null;
 }
 
-class MyEditor extends React.Component {
+
+
+
+class RichEditor extends React.Component {
   constructor(props) {
     super(props);
     const decorator = new CompositeDecorator([
@@ -101,7 +106,12 @@ class MyEditor extends React.Component {
       },
     ]);
 
-    this.state = {editorState: EditorState.createEmpty(decorator)};
+    this.state = {
+      editorState: EditorState.createEmpty(decorator),
+      showEntityDataPrompt: false,
+      entityType: '',
+      entityData: {},
+    };
 
     this.focus = () => this.refs.editor.focus();
     this.onChange = (editorState) => this.setState({editorState});
@@ -156,7 +166,7 @@ class MyEditor extends React.Component {
 
   _insertImage() {
     const {editorState} = this.state;
-    const entityKey = Entity.create('IMAGE', 'IMMUTABLE', {src: 'http://placekitten.com/g/200/200', description: 'Pretty Cat'});
+    const entityKey = Entity.create('IMAGE', 'IMMUTABLE', {url: 'http://placekitten.com/g/200/200', description: 'Pretty Cat'});
     this.onChange(
       AtomicBlockUtils.insertAtomicBlock(
         editorState,
@@ -167,7 +177,7 @@ class MyEditor extends React.Component {
   }
   _insertVideo() {
     const {editorState} = this.state;
-    const entityKey = Entity.create('VIDEO', 'IMMUTABLE', {src: 'http://images.apple.com/media/cn/macbook-pro/2016/b4a9efaa_6fe5_4075_a9d0_8e4592d6146c/films/design/macbook-pro-design-tft-cn-20161026_1536x640h.mp4', description: 'MacBook Pro'});
+    const entityKey = Entity.create('VIDEO', 'IMMUTABLE', {url: 'http://images.apple.com/media/cn/macbook-pro/2016/b4a9efaa_6fe5_4075_a9d0_8e4592d6146c/films/design/macbook-pro-design-tft-cn-20161026_1536x640h.mp4', description: 'MacBook Pro'});
     this.onChange(
       AtomicBlockUtils.insertAtomicBlock(
         editorState,
@@ -176,6 +186,35 @@ class MyEditor extends React.Component {
       )
     )
   }
+
+  _insertMedia() {
+    const {editorState, entityType, entityData} = this.state;
+    const entityKey = Entity.create(entityType, 'IMMUTABLE', entityData);
+    this.onChange(
+      AtomicBlockUtils.insertAtomicBlock(
+        editorState,
+        entityKey,
+        ' '
+      )
+    );
+    this.setState({
+      showEntityDataPrompt: false,
+      entityType: '',
+      entityData: {},
+    });
+  }
+
+  _promptForMedia(type) {
+    this.setState({
+      showEntityDataPrompt: true,
+      entityType: type,
+      entityData: {
+        url: '',
+        description: '',
+      },
+    });
+  }
+
 
   _toggleBlockType(blockType) {
     this.onChange(
@@ -196,18 +235,20 @@ class MyEditor extends React.Component {
     );
   }
 
+
   render() {
-    const {editorState} = this.state;
+    const {editorState, showEntityDataPrompt, entityType, entityData} = this.state;
+    const contentState = editorState.getCurrentContent();
 
     // If the user changes block type before entering any text, we can
     // either style the placeholder or hide it. Let's just hide it now.
     let className = 'RichEditor-editor';
-    var contentState = editorState.getCurrentContent();
     if (!contentState.hasText()) {
       if (contentState.getBlockMap().first().getType() !== 'unstyled') {
         className += ' RichEditor-hidePlaceholder';
       }
     }
+
 
     return (
       <div className="RichEditor-root">
@@ -224,6 +265,7 @@ class MyEditor extends React.Component {
           <StyleButton label="Image" onToggle={this.insertImage} />
           <StyleButton label="Video" onToggle={this.insertVideo} />
         </div>
+
         <div className={className} onClick={this.focus}>
           <Editor
             blockStyleFn={getBlockStyle}
@@ -332,5 +374,4 @@ const InlineStyleControls = (props) => {
 };
 
 
-
-export default MyEditor
+export default RichEditor
