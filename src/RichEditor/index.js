@@ -89,10 +89,8 @@ const myMediaBlockRenderer = (block) => {
       editable: false,
     };
   }
-
   return null;
 }
-
 
 
 
@@ -127,7 +125,8 @@ class RichEditor extends React.Component {
 
     this.insertLink = () => this._insertLink();
     this.insertImage = () => this._insertImage();
-    this.insertVideo = () => this._promptForMedia('VIDEO');
+    this.insertVideo = () => this._insertVideo();
+    // this.insertVideo = () => this._promptForMedia('VIDEO');
   }
 
   myKeyBindingFn(e) {
@@ -254,7 +253,7 @@ class RichEditor extends React.Component {
 
 
   render() {
-    const {editorState, showEntityDataPrompt, entityType, entityData} = this.state;
+    const {editorState, entityType} = this.state;
     const contentState = editorState.getCurrentContent();
 
     // If the user changes block type before entering any text, we can
@@ -288,6 +287,7 @@ class RichEditor extends React.Component {
             <SpanButton label="Video" active={entityType === 'VIDEO'} onToggle={this.insertVideo} />
           </div>
         </div>
+
         <div className={className} onClick={this.focus}>
           <Editor
             blockStyleFn={getBlockStyle}
