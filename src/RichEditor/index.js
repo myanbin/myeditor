@@ -118,12 +118,16 @@ class RichEditor extends React.Component {
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command);
     this.onTab = (e) => this._onTab(e);
+
+    this.undo = () => this._undo();
+    this.redo = () => this._redo();
+
     this.toggleBlockType = (type) => this._toggleBlockType(type);
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style);
 
     this.insertLink = () => this._insertLink();
     this.insertImage = () => this._insertImage();
-    this.insertVideo = () => this._insertVideo();
+    this.insertVideo = () => this._promptForMedia('VIDEO');
   }
 
   myKeyBindingFn(e) {
@@ -150,6 +154,19 @@ class RichEditor extends React.Component {
   _onTab(e) {
     const maxDepth = 4;
     this.onChange(RichUtils.onTab(e, this.state.editorState, maxDepth));
+  }
+
+  _undo () {
+    const {editorState} = this.state;
+    this.onChange(
+      EditorState.undo(editorState)
+    );
+  }
+  _redo () {
+    const {editorState} = this.state;
+    this.onChange(
+      EditorState.redo(editorState)
+    );
   }
 
   _insertLink() {
@@ -252,20 +269,25 @@ class RichEditor extends React.Component {
 
     return (
       <div className="RichEditor-root">
-        <BlockStyleControls
-          editorState={editorState}
-          onToggle={this.toggleBlockType}
-        />
-        <InlineStyleControls
-          editorState={editorState}
-          onToggle={this.toggleInlineStyle}
-        />
-        <div className="RichEditor-controls">
-          <StyleButton label="Link" onToggle={this.insertLink} />
-          <StyleButton label="Image" onToggle={this.insertImage} />
-          <StyleButton label="Video" onToggle={this.insertVideo} />
+        <div className="RichEditor-control">
+          <div className="RichEditor-controls">
+            <SpanButton label="Undo" onToggle={this.undo} />
+            <SpanButton label="Redo" onToggle={this.redo} />
+          </div>
+          <InlineStyleControls
+            editorState={editorState}
+            onToggle={this.toggleInlineStyle}
+          />
+          <BlockStyleControls
+            editorState={editorState}
+            onToggle={this.toggleBlockType}
+          />
+          <div className="RichEditor-controls">
+            <SpanButton label="Link" active={entityType === 'LINK'} onToggle={this.insertLink} />
+            <SpanButton label="Image" active={entityType === 'IMAGE'} onToggle={this.insertImage} />
+            <SpanButton label="Video" active={entityType === 'VIDEO'} onToggle={this.insertVideo} />
+          </div>
         </div>
-
         <div className={className} onClick={this.focus}>
           <Editor
             blockStyleFn={getBlockStyle}
@@ -289,7 +311,7 @@ class RichEditor extends React.Component {
 
 
 
-class StyleButton extends React.Component {
+class SpanButton extends React.Component {
   constructor() {
     super();
     this.onToggle = (e) => {
@@ -318,12 +340,12 @@ const BLOCK_TYPES = [
   {label: 'H2', style: 'header-two'},
   {label: 'H3', style: 'header-three'},
   {label: 'H4', style: 'header-four'},
-  {label: 'H5', style: 'header-five'},
-  {label: 'H6', style: 'header-six'},
+  // {label: 'H5', style: 'header-five'},
+  // {label: 'H6', style: 'header-six'},
   {label: 'Blockquote', style: 'blockquote'},
   {label: 'UL', style: 'unordered-list-item'},
   {label: 'OL', style: 'ordered-list-item'},
-  {label: 'Code Block', style: 'code-block'},
+  // {label: 'Code Block', style: 'code-block'},
 ];
 
 const BlockStyleControls = (props) => {
@@ -337,7 +359,7 @@ const BlockStyleControls = (props) => {
   return (
     <div className="RichEditor-controls">
       {BLOCK_TYPES.map((type) =>
-        <StyleButton
+        <SpanButton
           key={type.label}
           active={type.style === blockType}
           label={type.label}
@@ -353,7 +375,7 @@ const INLINE_STYLES = [
   {label: 'Bold', style: 'BOLD'},
   {label: 'Italic', style: 'ITALIC'},
   {label: 'Underline', style: 'UNDERLINE'},
-  {label: 'Monospace', style: 'CODE'},
+  // {label: 'Monospace', style: 'CODE'},
 ];
 
 const InlineStyleControls = (props) => {
@@ -361,7 +383,7 @@ const InlineStyleControls = (props) => {
   return (
     <div className="RichEditor-controls">
       {INLINE_STYLES.map(type =>
-        <StyleButton
+        <SpanButton
           key={type.label}
           active={currentStyle.has(type.style)}
           label={type.label}
