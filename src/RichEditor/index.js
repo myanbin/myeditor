@@ -121,7 +121,7 @@ class MediaPrompt extends React.Component {
     return (
       <div className="RichEditor-prompt">
         <div style={{display: 'flex'}}>
-          <input value={this.state.url} onChange={this.handleUrlChange} placeholder={`请输入${mediaMap.get(type)}地址`} />
+          <input value={this.state.url} onChange={this.handleUrlChange} autoFocus placeholder={`请输入${mediaMap.get(type)}地址`} />
           <span onMouseDown={this.props.onConfirm}>确定</span>
           <span onMouseDown={this.props.onCancel}>取消</span>
         </div>
@@ -155,7 +155,10 @@ class RichEditor extends React.Component {
       entityData: {},
     };
 
-    this.focus = () => this.refs.editor.focus();
+    this.focus = (e) => {
+      this.refs.editor.focus();
+      this.setState({showEntityDataPrompt: false, entityType: ''});
+    }
     this.onChange = (editorState) => this.setState({editorState});
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command);
