@@ -56,7 +56,7 @@ const Image = (props) => {
       <img src={props.src} alt={props.description} />
       <figcaption>{props.description}</figcaption>
     </div>
-  )
+  );
 }
 
 const Video = (props) => {
@@ -65,7 +65,7 @@ const Video = (props) => {
       <video controls src={props.src} style={{maxWidth: '100%'}} />
       <figcaption>{props.description}</figcaption>
     </div>
-  )
+  );
 }
 
 const Media = (props) => {
@@ -90,6 +90,50 @@ const myMediaBlockRenderer = (block) => {
     };
   }
   return null;
+}
+
+
+class MediaPrompt extends React.Component {
+  constructor() {
+    super();
+    this.state = {
+      url: '',
+      description: '',
+    };
+    this.handleUrlChange = (e) => {
+
+      // setState 是异步执行的函数，所以对 newState 的操作应该放到回调函数中
+      // http://stackoverflow.com/questions/33088482/onchange-in-react-doesnt-capture-the-last-character-of-text
+      this.setState({url: e.target.value}, () => this.props.onChange(this.state));
+    };
+    this.handleDescriptionChange = (e) => {
+      this.setState({description: e.target.value}, () => this.props.onChange(this.state));
+    };
+  }
+
+  render() {
+    const mediaMap = new Map([
+      ['LINK', '链接'],
+      ['IMAGE', '图片'],
+      ['VIDEO', '视频'],
+    ]);
+    const type = this.props.type;
+    return (
+      <div className="RichEditor-prompt">
+        <div style={{display: 'flex'}}>
+          <input value={this.state.url} onChange={this.handleUrlChange} placeholder={`请输入${mediaMap.get(type)}地址`} />
+          <span onMouseDown={this.props.onConfirm}>确定</span>
+          <span onMouseDown={this.props.onCancel}>取消</span>
+        </div>
+        {type !== 'LINK' ?
+          <div style={{display: 'flex'}}>
+            <input value={this.state.description} onChange={this.handleDescriptionChange} placeholder={`请输入${mediaMap.get(type)}描述（可选）`} />
+          </div>
+          : null
+        }
+      </div>
+    );
+  }
 }
 
 
@@ -123,10 +167,21 @@ class RichEditor extends React.Component {
     this.toggleBlockType = (type) => this._toggleBlockType(type);
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style);
 
-    this.insertLink = () => this._insertLink();
-    this.insertImage = () => this._insertImage();
-    this.insertVideo = () => this._insertVideo();
-    // this.insertVideo = () => this._promptForMedia('VIDEO');
+    this.insertLink = () => this._promptForMedia('LINK');
+    this.insertImage = () => this._promptForMedia('IMAGE');
+    this.insertVideo = () => this._promptForMedia('VIDEO');
+
+    this.promptForMedia = (type) => this._promptForMedia(type);
+
+    this.handleChange = (data) => this.setState({
+      entityData: data,
+    });
+    this.handleCancel = () => this.setState({
+      showEntityDataPrompt: false,
+      entityType: '',
+      entityData: {},
+    });
+    this.insertMedia = () => this._insertMedia();
   }
 
   myKeyBindingFn(e) {
@@ -168,51 +223,16 @@ class RichEditor extends React.Component {
     );
   }
 
-  _insertLink() {
-    const {editorState} = this.state;
-    const entityKey = Entity.create('LINK', 'MUTABLE', {url: 'https://myanbin.github.io'});
-    this.onChange(
-      RichUtils.toggleLink(
-        editorState,
-        editorState.getSelection(),
-        entityKey
-      )
-    );
-  }
-
-  _insertImage() {
-    const {editorState} = this.state;
-    const entityKey = Entity.create('IMAGE', 'IMMUTABLE', {url: 'http://placekitten.com/g/200/200', description: 'Pretty Cat'});
-    this.onChange(
-      AtomicBlockUtils.insertAtomicBlock(
-        editorState,
-        entityKey,
-        ' '
-      )
-    )
-  }
-  _insertVideo() {
-    const {editorState} = this.state;
-    const entityKey = Entity.create('VIDEO', 'IMMUTABLE', {url: 'http://images.apple.com/media/cn/macbook-pro/2016/b4a9efaa_6fe5_4075_a9d0_8e4592d6146c/films/design/macbook-pro-design-tft-cn-20161026_1536x640h.mp4', description: 'MacBook Pro'});
-    this.onChange(
-      AtomicBlockUtils.insertAtomicBlock(
-        editorState,
-        entityKey,
-        ' '
-      )
-    )
-  }
 
   _insertMedia() {
     const {editorState, entityType, entityData} = this.state;
-    const entityKey = Entity.create(entityType, 'IMMUTABLE', entityData);
-    this.onChange(
-      AtomicBlockUtils.insertAtomicBlock(
-        editorState,
-        entityKey,
-        ' '
-      )
-    );
+    const entityKey = Entity.create(entityType, entityType !== 'LINK' ? 'IMMUTABLE' : 'MUTABLE', entityData);
+    switch(entityType) {
+      case 'LINK'  : this.onChange(RichUtils.toggleLink(editorState, editorState.getSelection(), entityKey)); break;
+      case 'IMAGE' :
+      case 'VIDEO' : this.onChange(AtomicBlockUtils.insertAtomicBlock(editorState, entityKey, ' ')); break;
+      default : console.log('no match any type');
+    }
     this.setState({
       showEntityDataPrompt: false,
       entityType: '',
@@ -253,7 +273,7 @@ class RichEditor extends React.Component {
 
 
   render() {
-    const {editorState, entityType} = this.state;
+    const {editorState, showEntityDataPrompt, entityType} = this.state;
     const contentState = editorState.getCurrentContent();
 
     // If the user changes block type before entering any text, we can
@@ -270,24 +290,33 @@ class RichEditor extends React.Component {
       <div className="RichEditor-root">
         <div className="RichEditor-control">
           <div className="RichEditor-controls">
-            <SpanButton label="Undo" onToggle={this.undo} />
-            <SpanButton label="Redo" onToggle={this.redo} />
+            <SpanButton label="撤销" onToggle={this.undo} />
+            <SpanButton label="重做" onToggle={this.redo} />
           </div>
-          <InlineStyleControls
-            editorState={editorState}
-            onToggle={this.toggleInlineStyle}
-          />
           <BlockStyleControls
             editorState={editorState}
             onToggle={this.toggleBlockType}
           />
+          <InlineStyleControls
+            editorState={editorState}
+            onToggle={this.toggleInlineStyle}
+          />
           <div className="RichEditor-controls">
-            <SpanButton label="Link" active={entityType === 'LINK'} onToggle={this.insertLink} />
-            <SpanButton label="Image" active={entityType === 'IMAGE'} onToggle={this.insertImage} />
-            <SpanButton label="Video" active={entityType === 'VIDEO'} onToggle={this.insertVideo} />
+            <SpanButton label="链接" active={entityType === 'LINK'} onToggle={this.insertLink} />
+            <SpanButton label="图片" active={entityType === 'IMAGE'} onToggle={this.insertImage} />
+            <SpanButton label="视频" active={entityType === 'VIDEO'} onToggle={this.insertVideo} />
           </div>
         </div>
-
+        {
+          showEntityDataPrompt ?
+            <MediaPrompt
+              type={entityType}
+              onChange={this.handleChange}
+              onConfirm={this.insertMedia}
+              onCancel={this.handleCancel}
+            />
+            : null
+        }
         <div className={className} onClick={this.focus}>
           <Editor
             blockStyleFn={getBlockStyle}
@@ -336,15 +365,15 @@ class SpanButton extends React.Component {
 
 
 const BLOCK_TYPES = [
-  {label: 'H1', style: 'header-one'},
-  {label: 'H2', style: 'header-two'},
-  {label: 'H3', style: 'header-three'},
-  {label: 'H4', style: 'header-four'},
+  {label: '一级标题', style: 'header-one'},
+  {label: '二级标题', style: 'header-two'},
+  {label: '三级标题', style: 'header-three'},
+  {label: '四级标题', style: 'header-four'},
   // {label: 'H5', style: 'header-five'},
   // {label: 'H6', style: 'header-six'},
-  {label: 'Blockquote', style: 'blockquote'},
-  {label: 'UL', style: 'unordered-list-item'},
-  {label: 'OL', style: 'ordered-list-item'},
+  {label: '引用', style: 'blockquote'},
+  {label: '无序列表', style: 'unordered-list-item'},
+  {label: '有序列表', style: 'ordered-list-item'},
   // {label: 'Code Block', style: 'code-block'},
 ];
 
@@ -372,9 +401,10 @@ const BlockStyleControls = (props) => {
 };
 
 const INLINE_STYLES = [
-  {label: 'Bold', style: 'BOLD'},
-  {label: 'Italic', style: 'ITALIC'},
-  {label: 'Underline', style: 'UNDERLINE'},
+  {label: '加粗', style: 'BOLD'},
+  {label: '倾斜', style: 'ITALIC'},
+  {label: '下划线', style: 'UNDERLINE'},
+  {label: '删除线', style: 'STRIKETHROUGH'},
   // {label: 'Monospace', style: 'CODE'},
 ];
 

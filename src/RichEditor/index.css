@@ -69,3 +69,35 @@
   color: #5890ff;
 }
 
+
+
+.RichEditor-prompt {
+  position: absolute;
+  width: 400px;
+  left: calc(50% - 200px);
+  background-color: #fff;
+  box-shadow: 0 2px 20px 0 rgba(0,0,0,.08), 0 2px 9px 0 rgba(123,137,148,.08);
+  z-index: 999;
+}
+
+.RichEditor-prompt input {
+  display: inline-block;
+  flex: 1;
+  border: none;
+  outline: none;
+  line-height: 30px;
+  margin-left: 5px;
+  padding: 5px;
+  transition: border-color .3s ease-in-out;
+}
+
+.RichEditor-prompt span {
+  display: inline-block;
+  color: #999;
+  line-height: 40px;
+  margin: 0 10px;
+  cursor: pointer;
+}
+.RichEditor-prompt span:hover {
+  color: #5890ff;
+}
