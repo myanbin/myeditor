@@ -190,6 +190,8 @@ class RichEditor extends React.Component {
   myKeyBindingFn(e) {
     if (e.keyCode === 83 /* `S` key */ && KeyBindingUtil.hasCommandModifier(e)) {
       return 'save';
+    } else if (e.keyCode === 75 /* `K` key */ && KeyBindingUtil.hasCommandModifier(e)) {
+      return 'insert-link';
     }
     return getDefaultKeyBinding(e);
   }
@@ -198,6 +200,8 @@ class RichEditor extends React.Component {
 
     if (command === 'save') {
       console.log(convertToRaw(editorState.getCurrentContent()));
+    } else if (command === 'insert-link') {
+      this.insertLink();
     }
 
     const newState = RichUtils.handleKeyCommand(editorState, command);
@@ -310,15 +314,14 @@ class RichEditor extends React.Component {
             <SpanButton label="视频" active={entityType === 'VIDEO'} onToggle={this.insertVideo} />
           </div>
         </div>
-        {
-          showEntityDataPrompt ?
-            <MediaPrompt
-              type={entityType}
-              onChange={this.handleChange}
-              onConfirm={this.insertMedia}
-              onCancel={this.handleCancel}
-            />
-            : null
+        {showEntityDataPrompt ?
+          <MediaPrompt
+            type={entityType}
+            onChange={this.handleChange}
+            onConfirm={this.insertMedia}
+            onCancel={this.handleCancel}
+          />
+          : null
         }
         <div className={className} onClick={this.focus}>
           <Editor
