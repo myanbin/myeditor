@@ -375,12 +375,12 @@ const BLOCK_TYPES = [
   {label: '二级标题', style: 'header-two'},
   {label: '三级标题', style: 'header-three'},
   {label: '四级标题', style: 'header-four'},
-  // {label: 'H5', style: 'header-five'},
-  // {label: 'H6', style: 'header-six'},
+  // {label: '五级标题', style: 'header-five'},
+  // {label: '六级标题', style: 'header-six'},
   {label: '引用', style: 'blockquote'},
   {label: '无序列表', style: 'unordered-list-item'},
   {label: '有序列表', style: 'ordered-list-item'},
-  // {label: 'Code Block', style: 'code-block'},
+  {label: '代码块', style: 'code-block'},
 ];
 
 const BlockStyleControls = (props) => {
@@ -410,8 +410,8 @@ const INLINE_STYLES = [
   {label: '加粗', style: 'BOLD'},
   {label: '倾斜', style: 'ITALIC'},
   {label: '下划线', style: 'UNDERLINE'},
-  {label: '删除线', style: 'STRIKETHROUGH'},
-  // {label: 'Monospace', style: 'CODE'},
+  // {label: '删除线', style: 'STRIKETHROUGH'},
+  {label: '等宽字体', style: 'CODE'},
 ];
 
 const InlineStyleControls = (props) => {

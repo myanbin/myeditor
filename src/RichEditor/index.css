@@ -22,10 +22,6 @@
   padding: 15px;
 }
 
-.RichEditor-editor .public-DraftEditor-content {
-  height: 300px;
-  overflow-y: auto;
-}
 
 .RichEditor-hidePlaceholder .public-DraftEditorPlaceholder-root {
   display: none;
