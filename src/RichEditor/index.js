@@ -1,9 +1,17 @@
 import React from 'react';
-import { Editor, EditorState, Entity, CompositeDecorator, RichUtils, AtomicBlockUtils, getDefaultKeyBinding, KeyBindingUtil, convertToRaw } from 'draft-js';
+import { Editor, EditorState, Entity, CompositeDecorator, RichUtils, getDefaultKeyBinding, KeyBindingUtil, convertToRaw } from 'draft-js';
+
+import Image from '../components/Image'
+import { insertImage } from '../modifiers/image'
+import Link from '../components/Link'
+import { findLinkEntities, insertLink } from '../modifiers/link'
+import Mention from '../components/Mention'
+import { findMentionEntities } from '../modifiers/mention'
 
 import './index.css';
 
-// Custom overrides for "code" style.
+
+// Custom overrides for inline-content style.
 const styleMap = {
   CODE: {
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
@@ -15,9 +23,9 @@ const styleMap = {
     textDecoration: 'none',
     borderBottom: '1px solid',
   },
-};
+}
 
-
+// Custom overrides for block-content style
 const getBlockStyle = (block) => {
   switch (block.getType()) {
     case 'blockquote': return 'RichEditor-blockquote';
@@ -26,127 +34,51 @@ const getBlockStyle = (block) => {
 }
 
 
-const findLinkEntities = (contentBlock, callback) => {
-  contentBlock.findEntityRanges(
-    (character) => {
-      const entityKey = character.getEntity();
-      return (
-        entityKey !== null &&
-        Entity.get(entityKey).getType() === 'LINK'
-      );
-    },
-    callback
-  );
-}
-
-const Link = (props) => {
-  const {url} = Entity.get(props.entityKey).getData();
-  return (
-    <a href={url} style={{color: '#3b5998', textDecoration: 'none', borderBottom: '1px solid'}}>
-      {props.children}
-    </a>
-  );
-};
-
-
-
-const Image = (props) => {
-  return (
-    <div>
-      <img src={props.src} alt={props.description} />
-      <figcaption>{props.description}</figcaption>
-    </div>
-  );
-}
-
-const Video = (props) => {
-  return (
-    <div>
-      <video controls src={props.src} style={{maxWidth: '100%'}} />
-      <figcaption>{props.description}</figcaption>
-    </div>
-  );
-}
-
-const Media = (props) => {
-  const entity = Entity.get(props.block.getEntityAt(0));
-  const type = entity.getType();
-  const {url, description} = entity.getData();
-
-  switch(type) {
-    case 'IMAGE': return <Image src={url} description={description} />;
-    case 'VIDEO': return <Video src={url} description={description} />;
-    default: return null;
-  }
-}
+const decorator = new CompositeDecorator([
+  {
+    strategy: findLinkEntities,
+    component: Link,
+  },
+  {
+    strategy: findMentionEntities,
+    component: Mention,
+  },
+])
 
 
 const myMediaBlockRenderer = (block) => {
-  const type = block.getType();
-  if (type === 'atomic') {
-    return {
-      component: Media,
-      editable: false,
-    };
+  if (block.getType() === 'atomic') {
+    const entity = Entity.get(block.getEntityAt(0));
+    const type = entity.getType();
+    if (type === 'image') {
+      return {
+        component: Image,
+        editable: false,
+      };
+    } else if (type === 'video') {
+      return {
+        component: Image,
+        editable: false,
+      }
+    }
   }
   return null;
 }
 
-
-class MediaPrompt extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      url: '',
-      description: '',
-    };
-    this.handleUrlChange = (e) => {
-
-      // setState 是异步执行的函数，所以对 newState 的操作应该放到回调函数中
-      // http://stackoverflow.com/questions/33088482/onchange-in-react-doesnt-capture-the-last-character-of-text
-      this.setState({url: e.target.value}, () => this.props.onChange(this.state));
-    };
-    this.handleDescriptionChange = (e) => {
-      this.setState({description: e.target.value}, () => this.props.onChange(this.state));
-    };
+// 映射自定义的键盘快捷键
+const myKeyBindingFn = (e) => {
+  if (e.keyCode === 83 /* `S` key */ && KeyBindingUtil.hasCommandModifier(e)) {
+    return 'save';
+  } else if (e.keyCode === 75 /* `K` key */ && KeyBindingUtil.hasCommandModifier(e)) {
+    return 'insert-link';
   }
-
-  render() {
-    const mediaMap = new Map([
-      ['LINK', '链接'],
-      ['IMAGE', '图片'],
-      ['VIDEO', '视频'],
-    ]);
-    const type = this.props.type;
-    return (
-      <div className="RichEditor-prompt">
-        <div style={{display: 'flex'}}>
-          <input value={this.state.url} onChange={this.handleUrlChange} autoFocus placeholder={`请输入${mediaMap.get(type)}地址`} />
-          <span onMouseDown={this.props.onConfirm}>确定</span>
-          <span onMouseDown={this.props.onCancel}>取消</span>
-        </div>
-        {type !== 'LINK' ?
-          <div style={{display: 'flex'}}>
-            <input value={this.state.description} onChange={this.handleDescriptionChange} placeholder={`请输入${mediaMap.get(type)}描述（可选）`} />
-          </div>
-          : null
-        }
-      </div>
-    );
-  }
+  return getDefaultKeyBinding(e);
 }
-
 
 
 class RichEditor extends React.Component {
   constructor(props) {
     super(props);
-    const decorator = new CompositeDecorator([
-      {
-        strategy: findLinkEntities,
-        component: Link,
-      },
-    ]);
 
     this.state = {
       editorState: EditorState.createEmpty(decorator),
@@ -162,39 +94,16 @@ class RichEditor extends React.Component {
     this.onChange = (editorState) => this.setState({editorState});
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command);
-    this.onTab = (e) => this._onTab(e);
 
-    this.undo = () => this._undo();
-    this.redo = () => this._redo();
+    this.undo = () => this.onChange(EditorState.undo(this.state));
+    this.redo = () => this.onChange(EditorState.redo(this.state));
 
     this.toggleBlockType = (type) => this._toggleBlockType(type);
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style);
 
-    this.insertLink = () => this._promptForMedia('LINK');
-    this.insertImage = () => this._promptForMedia('IMAGE');
-    this.insertVideo = () => this._promptForMedia('VIDEO');
-
-    this.promptForMedia = (type) => this._promptForMedia(type);
-
-    this.handleChange = (data) => this.setState({
-      entityData: data,
-    });
-    this.handleCancel = () => this.setState({
-      showEntityDataPrompt: false,
-      entityType: '',
-      entityData: {},
-    });
-    this.insertMedia = () => this._insertMedia();
+    this.insertLink = () => this._insertLink();
   }
 
-  myKeyBindingFn(e) {
-    if (e.keyCode === 83 /* `S` key */ && KeyBindingUtil.hasCommandModifier(e)) {
-      return 'save';
-    } else if (e.keyCode === 75 /* `K` key */ && KeyBindingUtil.hasCommandModifier(e)) {
-      return 'insert-link';
-    }
-    return getDefaultKeyBinding(e);
-  }
   _handleKeyCommand(command) {
     const {editorState} = this.state;
 
@@ -212,53 +121,6 @@ class RichEditor extends React.Component {
     return false;
   }
 
-  _onTab(e) {
-    const maxDepth = 4;
-    this.onChange(RichUtils.onTab(e, this.state.editorState, maxDepth));
-  }
-
-  _undo () {
-    const {editorState} = this.state;
-    this.onChange(
-      EditorState.undo(editorState)
-    );
-  }
-  _redo () {
-    const {editorState} = this.state;
-    this.onChange(
-      EditorState.redo(editorState)
-    );
-  }
-
-
-  _insertMedia() {
-    const {editorState, entityType, entityData} = this.state;
-    const entityKey = Entity.create(entityType, entityType !== 'LINK' ? 'IMMUTABLE' : 'MUTABLE', entityData);
-    switch(entityType) {
-      case 'LINK'  : this.onChange(RichUtils.toggleLink(editorState, editorState.getSelection(), entityKey)); break;
-      case 'IMAGE' :
-      case 'VIDEO' : this.onChange(AtomicBlockUtils.insertAtomicBlock(editorState, entityKey, ' ')); break;
-      default : console.log('no match any type');
-    }
-    this.setState({
-      showEntityDataPrompt: false,
-      entityType: '',
-      entityData: {},
-    });
-  }
-
-  _promptForMedia(type) {
-    this.setState({
-      showEntityDataPrompt: true,
-      entityType: type,
-      entityData: {
-        url: '',
-        description: '',
-      },
-    });
-  }
-
-
   _toggleBlockType(blockType) {
     this.onChange(
       RichUtils.toggleBlockType(
@@ -269,7 +131,7 @@ class RichEditor extends React.Component {
   }
 
   _toggleInlineStyle(inlineStyle) {
-    console.log('change inline style: ', inlineStyle);
+
     this.onChange(
       RichUtils.toggleInlineStyle(
         this.state.editorState,
@@ -278,6 +140,15 @@ class RichEditor extends React.Component {
     );
   }
 
+  _insertLink() {
+    const data = {
+      src: 'https://myanbin.github.io/',
+      description: 'my blog',
+    }
+    this.onChange(
+      insertLink(this.state.editorState, data)
+    )
+  }
 
   render() {
     const {editorState, showEntityDataPrompt, entityType} = this.state;
@@ -311,26 +182,16 @@ class RichEditor extends React.Component {
           <div className="RichEditor-controls">
             <SpanButton label="链接" active={entityType === 'LINK'} onToggle={this.insertLink} />
             <SpanButton label="图片" active={entityType === 'IMAGE'} onToggle={this.insertImage} />
-            <SpanButton label="视频" active={entityType === 'VIDEO'} onToggle={this.insertVideo} />
           </div>
         </div>
-        {showEntityDataPrompt ?
-          <MediaPrompt
-            type={entityType}
-            onChange={this.handleChange}
-            onConfirm={this.insertMedia}
-            onCancel={this.handleCancel}
-          />
-          : null
-        }
         <div className={className} onClick={this.focus}>
           <Editor
             blockStyleFn={getBlockStyle}
             customStyleMap={styleMap}
             blockRendererFn={myMediaBlockRenderer}
-            editorState={editorState}
+            keyBindingFn={myKeyBindingFn}
             handleKeyCommand={this.handleKeyCommand}
-            keyBindingFn={this.myKeyBindingFn}
+            editorState={editorState}
             onChange={this.onChange}
             onTab={this.onTab}
             placeholder="Tell a story..."
@@ -346,6 +207,7 @@ class RichEditor extends React.Component {
 
 
 
+// Toolbar component
 class SpanButton extends React.Component {
   constructor() {
     super();
@@ -406,6 +268,7 @@ const BlockStyleControls = (props) => {
   );
 };
 
+
 const INLINE_STYLES = [
   {label: '加粗', style: 'BOLD'},
   {label: '倾斜', style: 'ITALIC'},
@@ -430,6 +293,8 @@ const InlineStyleControls = (props) => {
     </div>
   );
 };
+
+
 
 
 export default RichEditor
