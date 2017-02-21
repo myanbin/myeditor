@@ -7,7 +7,7 @@ export default class Image extends React.Component {
     const { src, description } = entity.getData();
     return (
       <div>
-        <img src={src} alt={description} />
+        <img src={src} alt={description} style={{maxWidth: '100%'}} />
         <figcaption>{description}</figcaption>
       </div>
     );

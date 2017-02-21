@@ -1,6 +1,6 @@
 import { Entity, RichUtils } from 'draft-js'
 
-const insertLink = (editorState, data) => {
+const addLink = (editorState, data) => {
   const entityKey = Entity.create('link', 'MUTABLE', data);
   return RichUtils.toggleLink(editorState, editorState.getSelection(), entityKey);
 }
@@ -18,4 +18,4 @@ const findLinkEntities = (contentBlock, callback) => {
   );
 }
 
-export { findLinkEntities, insertLink }
+export { findLinkEntities, addLink }

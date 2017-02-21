@@ -2,9 +2,9 @@ import React from 'react';
 import { Editor, EditorState, Entity, CompositeDecorator, RichUtils, getDefaultKeyBinding, KeyBindingUtil, convertToRaw } from 'draft-js';
 
 import Image from '../components/Image'
-import { insertImage } from '../modifiers/image'
+import { addImage } from '../modifiers/image'
 import Link from '../components/Link'
-import { findLinkEntities, insertLink } from '../modifiers/link'
+import { findLinkEntities, addLink } from '../modifiers/link'
 import Mention from '../components/Mention'
 import { findMentionEntities } from '../modifiers/mention'
 
@@ -102,6 +102,7 @@ class RichEditor extends React.Component {
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style);
 
     this.insertLink = () => this._insertLink();
+    this.insertImage = () => this._insertImage();
   }
 
   _handleKeyCommand(command) {
@@ -146,7 +147,17 @@ class RichEditor extends React.Component {
       description: 'my blog',
     }
     this.onChange(
-      insertLink(this.state.editorState, data)
+      addLink(this.state.editorState, data)
+    )
+  }
+
+  _insertImage() {
+    const data = {
+      src: 'http://ww1.sinaimg.cn/mw690/b22ba716ly1fcxu21947oj20nm0fp7dd',
+      description: 'smile_by_bestday-d2xrc2p',
+    }
+    this.onChange(
+      addImage(this.state.editorState, data)
     )
   }
 
@@ -180,8 +191,8 @@ class RichEditor extends React.Component {
             onToggle={this.toggleInlineStyle}
           />
           <div className="RichEditor-controls">
-            <SpanButton label="链接" active={entityType === 'LINK'} onToggle={this.insertLink} />
-            <SpanButton label="图片" active={entityType === 'IMAGE'} onToggle={this.insertImage} />
+            <SpanButton label="链接" onToggle={this.insertLink} />
+            <SpanButton label="图片" onToggle={this.insertImage} />
           </div>
         </div>
         <div className={className} onClick={this.focus}>
