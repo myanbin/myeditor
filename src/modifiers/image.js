@@ -1,8 +1,11 @@
-import { Entity, AtomicBlockUtils } from 'draft-js'
+import { AtomicBlockUtils, EditorState } from 'draft-js'
 
 const addImage = (editorState, data) => {
-  const entityKey = Entity.create('image', 'IMMUTABLE', data);
-  return AtomicBlockUtils.insertAtomicBlock(editorState, entityKey, ' ');
+  const contentState = editorState.getCurrentContent();
+  const contentStateWithEntity = contentState.createEntity('image', 'IMMUTABLE', data);
+  const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+  const newEditorState = EditorState.set(editorState, { currentContent: contentStateWithEntity });
+  return AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, ' ');
 }
 
 export { addImage }

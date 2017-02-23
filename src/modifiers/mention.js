@@ -1,6 +1,10 @@
-import { Entity } from 'draft-js'
+import { EditorState } from 'draft-js'
 
-const findMentionEntities = (contentBlock, callback) => {
+const addMention = (editorState, data) => {
+  console.log('addMention ...')
+}
+
+const findMentionEntities = (contentBlock, callback, contentState) => {
   const text = contentBlock.getText();
   const MENTION_REGEX = /[@][\w]+/g;
   let match, start;
@@ -8,6 +12,18 @@ const findMentionEntities = (contentBlock, callback) => {
     start = match.index;
     callback(start, start + match[0].length);
   }
+/*
+  contentBlock.findEntityRanges(
+    (character) => {
+      const entityKey = character.getEntity();
+      return (
+        entityKey !== null &&
+        contentState.getEntity(entityKey).getType() === 'mention'
+      );
+    },
+    callback
+  );
+*/
 }
 
 export { findMentionEntities }

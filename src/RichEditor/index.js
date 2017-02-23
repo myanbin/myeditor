@@ -1,12 +1,14 @@
 import React from 'react';
-import { Editor, EditorState, Entity, CompositeDecorator, RichUtils, getDefaultKeyBinding, KeyBindingUtil, convertToRaw } from 'draft-js';
+import { Editor, EditorState, CompositeDecorator, RichUtils, getDefaultKeyBinding, KeyBindingUtil, convertToRaw } from 'draft-js';
 
-import Image from '../components/Image'
-import { addImage } from '../modifiers/image'
+
 import Link from '../components/Link'
 import { findLinkEntities, addLink } from '../modifiers/link'
 import Mention from '../components/Mention'
 import { findMentionEntities } from '../modifiers/mention'
+
+import MediaBlock from '../components/MediaBlock'
+import { addImage } from '../modifiers/image'
 
 import './index.css';
 
@@ -48,20 +50,12 @@ const decorator = new CompositeDecorator([
 
 const myMediaBlockRenderer = (block) => {
   if (block.getType() === 'atomic') {
-    const entity = Entity.get(block.getEntityAt(0));
-    const type = entity.getType();
-    if (type === 'image') {
-      return {
-        component: Image,
-        editable: false,
-      };
-    } else if (type === 'video') {
-      return {
-        component: Image,
-        editable: false,
-      }
-    }
+    return {
+      component: MediaBlock,
+      editable: false,
+    };
   }
+
   return null;
 }
 
@@ -82,9 +76,6 @@ class RichEditor extends React.Component {
 
     this.state = {
       editorState: EditorState.createEmpty(decorator),
-      showEntityDataPrompt: false,
-      entityType: '',
-      entityData: {},
     };
 
     this.focus = (e) => {
@@ -95,8 +86,8 @@ class RichEditor extends React.Component {
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command);
 
-    this.undo = () => this.onChange(EditorState.undo(this.state));
-    this.redo = () => this.onChange(EditorState.redo(this.state));
+    this.undo = () => this._undo();
+    this.redo = () => this._redo();
 
     this.toggleBlockType = (type) => this._toggleBlockType(type);
     this.toggleInlineStyle = (style) => this._toggleInlineStyle(style);
@@ -106,7 +97,7 @@ class RichEditor extends React.Component {
   }
 
   _handleKeyCommand(command) {
-    const {editorState} = this.state;
+    const { editorState } = this.state;
 
     if (command === 'save') {
       console.log(convertToRaw(editorState.getCurrentContent()));
@@ -120,6 +111,19 @@ class RichEditor extends React.Component {
       return true;
     }
     return false;
+  }
+
+  _undo () {
+    const { editorState} = this.state;
+    this.onChange(
+      EditorState.undo(editorState)
+    );
+  }
+  _redo () {
+    const { editorState } = this.state;
+    this.onChange(
+      EditorState.redo(editorState)
+    );
   }
 
   _toggleBlockType(blockType) {
@@ -162,7 +166,7 @@ class RichEditor extends React.Component {
   }
 
   render() {
-    const {editorState, showEntityDataPrompt, entityType} = this.state;
+    const { editorState } = this.state;
     const contentState = editorState.getCurrentContent();
 
     // If the user changes block type before entering any text, we can
@@ -204,7 +208,6 @@ class RichEditor extends React.Component {
             handleKeyCommand={this.handleKeyCommand}
             editorState={editorState}
             onChange={this.onChange}
-            onTab={this.onTab}
             placeholder="Tell a story..."
             ref="editor"
             stripPastedStyles={true}

@@ -1,15 +1,12 @@
-import React from 'react'
-import { Entity } from 'draft-js'
+import React from 'react';
 
-export default class Image extends React.Component {
-  render() {
-    const entity = Entity.get(this.props.block.getEntityAt(0));
-    const { src, description } = entity.getData();
-    return (
-      <div>
-        <img src={src} alt={description} style={{maxWidth: '100%'}} />
-        <figcaption>{description}</figcaption>
-      </div>
-    );
-  }
+const Image = (props) => {
+  return (
+    <div>
+      <img src={props.src} alt={props.description} style={{maxWidth: '100%'}} />
+      <figcaption>{props.description}</figcaption>
+    </div>
+  );
 }
+
+export default Image
