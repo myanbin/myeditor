@@ -1,10 +1,16 @@
-import React, { Component } from 'react';
+import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
 import RichEditor from './RichEditor/index'
 
-class App extends Component {
+import { uuid } from './utils/index'
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    console.log(uuid());
+  }
   render() {
     return (
       <div className="App">

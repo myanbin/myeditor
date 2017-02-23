@@ -178,7 +178,6 @@ class RichEditor extends React.Component {
       }
     }
 
-
     return (
       <div className="RichEditor-root">
         <div className="RichEditor-control">
