@@ -10,6 +10,8 @@ import { findMentionEntities } from '../modifiers/mention'
 import MediaBlock from '../components/MediaBlock'
 import { addImage } from '../modifiers/image'
 
+import { counter } from '../utils/counter'
+
 import './index.css';
 
 // 加载编辑器 rawContent 数据
@@ -103,6 +105,7 @@ class RichEditor extends React.Component {
 
     if (command === 'save') {
       console.log(convertToRaw(editorState.getCurrentContent()));
+      console.log(counter(editorState));
     } else if (command === 'insert-link') {
       this.insertLink();
     }
@@ -220,9 +223,6 @@ class RichEditor extends React.Component {
 }
 
 
-
-
-// Toolbar component
 class SpanButton extends React.Component {
   constructor() {
     super();
@@ -308,8 +308,6 @@ const InlineStyleControls = (props) => {
     </div>
   );
 };
-
-
 
 
 export default RichEditor

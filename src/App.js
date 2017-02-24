@@ -4,7 +4,7 @@ import './App.css';
 
 import RichEditor from './RichEditor/index'
 
-import { uuid } from './utils/index'
+import { uuid } from './utils/uuid'
 
 class App extends React.Component {
   constructor(props) {
