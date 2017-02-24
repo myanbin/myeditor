@@ -1,5 +1,5 @@
 import React from 'react';
-import { Editor, EditorState, CompositeDecorator, RichUtils, getDefaultKeyBinding, KeyBindingUtil, convertToRaw } from 'draft-js';
+import { Editor, EditorState, CompositeDecorator, RichUtils, getDefaultKeyBinding, KeyBindingUtil, convertFromRaw, convertToRaw } from 'draft-js';
 
 
 import Link from '../components/Link'
@@ -12,6 +12,8 @@ import { addImage } from '../modifiers/image'
 
 import './index.css';
 
+// 加载编辑器 rawContent 数据
+import rawContent from '../data/content'
 
 // Custom overrides for inline-content style.
 const styleMap = {
@@ -75,7 +77,7 @@ class RichEditor extends React.Component {
     super(props);
 
     this.state = {
-      editorState: EditorState.createEmpty(decorator),
+      editorState: EditorState.createWithContent(convertFromRaw(rawContent), decorator),
     };
 
     this.focus = (e) => {

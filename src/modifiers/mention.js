@@ -1,4 +1,3 @@
-import { EditorState } from 'draft-js'
 
 const addMention = (editorState, data) => {
   console.log('addMention ...')
@@ -26,4 +25,4 @@ const findMentionEntities = (contentBlock, callback, contentState) => {
 */
 }
 
-export { findMentionEntities }
+export { findMentionEntities, addMention }
