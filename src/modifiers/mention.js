@@ -7,6 +7,7 @@ const findMentionEntities = (contentBlock, callback, contentState) => {
   const text = contentBlock.getText();
   const MENTION_REGEX = /[@][\w]+/g;
   let match, start;
+  // eslint-disable-next-line
   while ((match = MENTION_REGEX.exec(text)) !== null) {
     start = match.index;
     callback(start, start + match[0].length);
