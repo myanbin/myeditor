@@ -82,10 +82,7 @@ class RichEditor extends React.Component {
       editorState: EditorState.createWithContent(convertFromRaw(rawContent), decorator),
     };
 
-    this.focus = (e) => {
-      this.refs.editor.focus();
-      this.setState({showEntityDataPrompt: false, entityType: ''});
-    }
+    this.focus = (e) => this.refs.editor.focus();
     this.onChange = (editorState) => this.setState({editorState});
 
     this.handleKeyCommand = (command) => this._handleKeyCommand(command);
