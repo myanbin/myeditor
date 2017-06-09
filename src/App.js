@@ -2,7 +2,6 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import BasicEditor from './BasicEditor/index';
 import RichEditor from './RichEditor/index';
 
 import { uuid } from './utils/uuid';
@@ -10,7 +9,8 @@ import { uuid } from './utils/uuid';
 class App extends React.Component {
   constructor(props) {
     super(props);
-    console.log(uuid());
+    // 初始化时分配一个 document id
+    console.log('document id:', uuid());
   }
   render() {
     return (
@@ -20,10 +20,8 @@ class App extends React.Component {
           <h2>基于 Draft.js 打造的编辑器</h2>
         </div>
         <div className="App-content">
-          <h3>图文编辑器</h3>
+          <h3>富文本编辑器</h3>
           <RichEditor />
-          <h3>纯文本编辑器</h3>
-          <BasicEditor />
         </div>
       </div>
     );

@@ -1,8 +1,8 @@
 .RichEditor-root {
   background: #fff;
   border: 1px solid #ddd;
-  font-family: 'Dengxian', sans-serif;
-  font-size: 14px;
+  font-family: sans-serif;
+  font-size: 16px;
   padding: 15px;
   text-align: left;
   position: relative;
@@ -35,7 +35,7 @@
 }
 
 .RichEditor-editor .public-DraftStyleDefault-block {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .RichEditor-editor .public-DraftStyleDefault-pre {
   background-color: rgba(0, 0, 0, 0.05);
@@ -47,7 +47,7 @@
 .RichEditor-controls {
   display: inline-block;
   font-family: 'Dengxian', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   margin-bottom: 5px;
   user-select: none;
 }

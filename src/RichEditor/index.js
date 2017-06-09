@@ -159,8 +159,8 @@ class RichEditor extends React.Component {
 
   _insertImage() {
     const data = {
-      src: 'http://ww1.sinaimg.cn/mw690/b22ba716ly1fcxu21947oj20nm0fp7dd',
-      description: 'smile_by_bestday-d2xrc2p',
+      src: 'http://www.xlzx.cn/newsite/upimg/allimg/1011/48_29105448.jpg',
+      description: '白鸟之死',
     }
     this.onChange(
       addImage(this.state.editorState, data)
